@@ -24,21 +24,35 @@ def main():
 
     # formatted_data = json.dumps(events, indent=2)
     # print(formatted_data)
+    if response.status_code == 200:
+        lastest_event = events
+        print(f"\nLatest events for {username}")
+
+    seen_push = False
+    seen_issue = False
+    seen_watch = False
 
     for event in events:
         event_type = event.get('type')
         repo_name = event['repo']['name']
 
-        if event_type == 'PushEvent':
-            commits_list = event['payload'].get('commits', [])
-            print(f"- Pushed {len(commits_list)} commits to {repo_name}")
+        if event_type == 'PushEvent' and not seen_push:
+            # GitHub has discontinued sending commit counts via this API (updated Oct 2025).
+            # Therefore, we will now only indicate that a commit has been pushed.
+            print(f"- Pushed updates to {repo_name}")
+            seen_push = True
         
-        elif event_type == 'IssuesEvent':
+        elif event_type == 'IssuesEvent' and not seen_issue:
             action = event['payload']['action']
             print(f"- {action.capitalize()} an issue in {repo_name}")
+            seen_issue = True
 
-        elif event_type == 'WatchEvent':
+        elif event_type == 'WatchEvent' and not seen_watch:
             print(f"- Starred {repo_name}")
+            seen_watch = True
+
+        if seen_push and seen_issue and seen_watch:
+            break
 
 if __name__ == "__main__":
     main()
